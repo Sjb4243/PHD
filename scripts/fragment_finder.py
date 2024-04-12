@@ -68,3 +68,5 @@ for i in full_fastas:
 with open("long_fastas.txt", "w") as outfile:
     for fasta in long_fastas:
         outfile.write(fasta)
+
+#beep boop this is a test
