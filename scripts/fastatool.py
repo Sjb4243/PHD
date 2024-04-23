@@ -1,7 +1,6 @@
 import argparse
 import matplotlib.pyplot as plt
 from itertools import zip_longest
-
 from helper_functions import *
 from collections import defaultdict
 import statistics
@@ -22,7 +21,7 @@ def main():
     parser.add_argument('-p', '--plots', help='True/false for if you want plots', default=False)
     parser.add_argument('-s', '--search', help='Search the fasta line for text (supports regex)')
     parser.add_argument('-o', '--output', help='Output file containing curated fastas')
-    parser.add_argument('-c', '--cutoff', help = 'Length cutoff for fragments', default=0, type=int)
+    parser.add_argument('-c', '--cutoff', help = 'Length cutoff for fragments, has a minimum and maximum length, sep by comma', default=[0,200000000])
 
     args = parser.parse_args()
     fasta_list = get_fastas(args.fasta)
@@ -34,7 +33,7 @@ def main():
     for fasta in fasta_list:
         id_line = fasta[0]
         if args.search:
-            if re.search("^>" + ".*" + args.search, id_line):
+            if re.search(r"^>" + ".*" + args.search, id_line, flags=re.IGNORECASE):
                 obj_list.append(create_obj(fasta, input_id_list, args.cutoff))
         else:
             if id_line.startswith(">"):
@@ -96,7 +95,11 @@ def create_obj(fasta_entry, id_list, length_cutoff):
     data = extract_data(id_line)
     id, species, protein = data[0], data[1], data[2]
     fasta_lines = fasta_entry[1:]
-    if len("".join(fasta_lines)) > length_cutoff:
+    mini,maxi = length_cutoff.split(",")
+    mini = int(mini)
+    maxi = int(maxi)
+    print(maxi)
+    if len("".join(fasta_lines)) > mini and len("".join(fasta_lines)) < maxi:
         if len(id_list) > 0:
             if id in id_list:
                 finished_obj = fasta_obj(id, species, protein, fasta_lines, fasta_entry[0])
