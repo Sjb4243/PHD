@@ -21,7 +21,7 @@ def main():
     parser.add_argument('-p', '--plots', help='True/false for if you want plots', default=False)
     parser.add_argument('-s', '--search', help='Search the fasta line for text (supports regex)')
     parser.add_argument('-o', '--output', help='Output file containing curated fastas')
-    parser.add_argument('-c', '--cutoff', help = 'Length cutoff for fragments, has a minimum and maximum length, sep by comma', default=[0,200000000])
+    parser.add_argument('-c', '--cutoff', help = 'Length cutoff for fragments, has a minimum and maximum length, sep by comma', default="0,200000000")
 
     args = parser.parse_args()
     fasta_list = get_fastas(args.fasta)
@@ -71,7 +71,7 @@ def print_summary(fasta_objects):
     for key,val in species_dict.items():
         print(f"{key}: {val}")
     print("#######################SIZE#######################")
-    print(f"Mean length of fragment size is: {statistics.mean(length_list)}")
+    #print(f"Mean length of fragment size is: {statistics.mean(length_list)}")
     return length_list, species_dict
 
 def print_plots(length, species):
