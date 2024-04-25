@@ -5,11 +5,14 @@ def get_fastas(fasta_file):
     """
     Obtain a list of fastas from a fasta file
     Parameters:
-    param (type): fasta file
+    param (type): fasta file DIRECTORY
 
     Returns:
     type: List of fasta files + a header
     """
+    with open(fasta_file, "r") as infile:
+        fasta_file = infile.readlines()
+
     skipped = 0
     fasta_list = []
     for i in range(len(fasta_file)):
@@ -36,15 +39,6 @@ def get_fastas(fasta_file):
                     runs += 1
     return fasta_list
 
-def get_species_id_name(fasta_file):
-    """
-    :param fasta_file:
-    :return: Returns a dictionary of IDs plus the species names
-    """
-    trembl_ids = {line.split("|")[1]: re.findall("(?<=OS=)\w* \w*", line.split("|")[2]) for line in fasta_file if line.startswith(">")}
-    return trembl_ids
-
-
 def extract_data(fasta_header):
     """
     :param fasta_header: fasta header line (uniprot)
@@ -53,10 +47,20 @@ def extract_data(fasta_header):
     split_header = fasta_header.split("|")
     reg_split = re.split(r"\||_", fasta_header)
     id = split_header[1]
-    species_name = re.findall(r"(?<=OS=)\w* \w*", split_header[2])[0]
+    print(split_header)
+    print(re.findall(r"(?<=OS=)\w*(?=[ |_]OX)", split_header[2]))
+    species_name = re.findall(r"(?<=OS=).*(?=[ |_]OX)", split_header[2])[0]
     protein = re.findall(r"(?<=.{5} ).*(?= OS=)", reg_split[3])
     if not protein:
         protein = "UNKNOWN"
     else:
         protein = protein[0]
     return([id,species_name, protein])
+
+def make_id(*comps):
+    empt = ""
+    for arg in comps:
+        empt += arg + "_"
+    empt = empt[:-1]
+    empt += "\n"
+    return empt

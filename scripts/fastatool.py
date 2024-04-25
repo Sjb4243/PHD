@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import matplotlib.pyplot as plt
 from itertools import zip_longest
@@ -21,11 +22,11 @@ def main():
     parser.add_argument('-p', '--plots', help='True/false for if you want plots', default=False)
     parser.add_argument('-s', '--search', help='Search the fasta line for text (supports regex)')
     parser.add_argument('-o', '--output', help='Output file containing curated fastas')
-    parser.add_argument('-c', '--cutoff', help = 'Length cutoff for fragments, has a minimum and maximum length, sep by comma', default="0,200000000")
+    parser.add_argument('-c', '--cutoff', help = 'Length cutoff for fragments, has a minimum and maximum length, sep by comma', default="200,200000000")
     parser.add_argument('-m', '--metadata', help= 'If writing to output, create a metadata file', default=False)
     args = parser.parse_args()
-    print(args)
-    fasta_list = get_fastas(args.fasta)
+    fasta_list= get_fastas(args.fasta)
+    fasta_list = remove_duplicates(fasta_list)
     input_id_list = []
     if args.ID:
         with open(args.ID, "r") as idfile:
@@ -44,6 +45,15 @@ def main():
         save_output(obj_list, args.output, args)
     if args.plots:
         print_plots(length_list, species_dict)
+
+def remove_duplicates(fasta_list):
+    seen = set()
+    non_dupes = []
+    for line in fasta_list:
+        if line[0] not in seen:
+            non_dupes.append(line)
+            seen.add(line[0])
+    return non_dupes
 
 def save_output(fasta_objects, output_filename, args):
     id_lines = []
@@ -73,6 +83,7 @@ def save_output(fasta_objects, output_filename, args):
             meta_data_output.write(">Length" + "\n")
             mini,maxi = args.cutoff.split(",")
             meta_data_output.write(f"Cutoff:{mini},{maxi}" + "\n")
+            meta_data_output.write(f"Smallest/largest frag sizes:{len(min(full_fasta_strings, key=len))},{len(max(full_fasta_strings, key=len))}")
 
 
 def print_summary(fasta_objects):
