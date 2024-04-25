@@ -22,8 +22,9 @@ def main():
     parser.add_argument('-s', '--search', help='Search the fasta line for text (supports regex)')
     parser.add_argument('-o', '--output', help='Output file containing curated fastas')
     parser.add_argument('-c', '--cutoff', help = 'Length cutoff for fragments, has a minimum and maximum length, sep by comma', default="0,200000000")
-
+    parser.add_argument('-m', '--metadata', help= 'If writing to output, create a metadata file', default=False)
     args = parser.parse_args()
+    print(args)
     fasta_list = get_fastas(args.fasta)
     input_id_list = []
     if args.ID:
@@ -40,11 +41,11 @@ def main():
                 obj_list.append(create_obj(fasta, input_id_list, args.cutoff))
     length_list, species_dict = print_summary(obj_list)
     if args.output:
-        save_output(obj_list, args.output)
+        save_output(obj_list, args.output, args)
     if args.plots:
         print_plots(length_list, species_dict)
 
-def save_output(fasta_objects, output_filename):
+def save_output(fasta_objects, output_filename, args):
     id_lines = []
     fasta_strings = []
     for item in fasta_objects:
@@ -58,6 +59,20 @@ def save_output(fasta_objects, output_filename):
     with open(output_filename + "_ids", "w") as id_output:
         for id in id_lines:
             id_output.write(id.split("|")[1] + "\n")
+    if args.metadata:
+        with open(output_filename + "_metadata", "w") as meta_data_output:
+            species_dict = defaultdict(int)
+            full_fasta_strings = []
+            for item in fasta_objects:
+                if item:
+                    species_dict[item.species] += 1
+                    full_fasta_strings.append(item.fasta_string)
+            meta_data_output.write(">Species" + "\n")
+            for key,val in species_dict.items():
+                meta_data_output.write(f"{key}:{val}" + "\n")
+            meta_data_output.write(">Length" + "\n")
+            mini,maxi = args.cutoff.split(",")
+            meta_data_output.write(f"Cutoff:{mini},{maxi}" + "\n")
 
 
 def print_summary(fasta_objects):
@@ -71,7 +86,10 @@ def print_summary(fasta_objects):
     for key,val in species_dict.items():
         print(f"{key}: {val}")
     print("#######################SIZE#######################")
-    #print(f"Mean length of fragment size is: {statistics.mean(length_list)}")
+    try:
+        print(f"Mean length of fragment size is: {statistics.mean(length_list)}")
+    except:
+        print("Data too short for mean")
     return length_list, species_dict
 
 def print_plots(length, species):
@@ -96,10 +114,7 @@ def create_obj(fasta_entry, id_list, length_cutoff):
     id, species, protein = data[0], data[1], data[2]
     fasta_lines = fasta_entry[1:]
     mini,maxi = length_cutoff.split(",")
-    mini = int(mini)
-    maxi = int(maxi)
-    print(maxi)
-    if len("".join(fasta_lines)) > mini and len("".join(fasta_lines)) < maxi:
+    if len("".join(fasta_lines)) > int(mini) and len("".join(fasta_lines)) < int(maxi):
         if len(id_list) > 0:
             if id in id_list:
                 finished_obj = fasta_obj(id, species, protein, fasta_lines, fasta_entry[0])

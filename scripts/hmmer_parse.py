@@ -5,7 +5,6 @@
 ##### parse HMMER tbl output and generate FASTA files from Uniprot and tab for comparisons 
 
 import argparse
-import sys
 import gzip
 
 
