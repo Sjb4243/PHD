@@ -6,6 +6,7 @@ from helper_functions import *
 from collections import defaultdict
 import statistics
 import re
+
 class fasta_obj:
     def __init__(self, id, species, protein, fasta_string, full_id):
         self.id = id
@@ -25,58 +26,80 @@ def main():
     parser.add_argument('-c', '--cutoff', help = 'Length cutoff for fragments, has a minimum and maximum length, sep by comma', default="200,200000000")
     parser.add_argument('-m', '--metadata', help= 'If writing to output, create a metadata file', default=False)
     args = parser.parse_args()
+    #Uses the get_fastas function from helper_functions.py
+    #This returns a 2d list, where each element consists of a list of the ID line followed by the fasta strings
     fasta_list= get_fastas(args.fasta)
+    #Removes duplicate ID lines
     fasta_list = remove_duplicates(fasta_list)
     input_id_list = []
+    #If the user wants to filter by IDs, generate a list of IDs based on an input file
     if args.ID:
         with open(args.ID, "r") as idfile:
             input_id_list = [line.strip() for line in idfile]
+    #Init a list for storing fasta objects
     obj_list = []
     for fasta in fasta_list:
         id_line = fasta[0]
+        #Loop through the fastas - If the user has a string to search with, append that to a regex
+        #This regex could probably be made better but for every usecase so far it's proved to be enough
         if args.search:
             if re.search(r"^>" + ".*" + args.search, id_line, flags=re.IGNORECASE):
                 obj_list.append(create_obj(fasta, input_id_list, args.cutoff))
         else:
             if id_line.startswith(">"):
                 obj_list.append(create_obj(fasta, input_id_list, args.cutoff))
+    #Sends off the species + amino acid length to be printed to terminal
     length_list, species_dict = print_summary(obj_list)
+    #Saving files
     if args.output:
         save_output(obj_list, args.output, args)
+    #Plotting output
     if args.plots:
         print_plots(length_list, species_dict)
 
 def remove_duplicates(fasta_list):
+    #init a set - now that I think about it this may not need to be a set
     seen = set()
     non_dupes = []
     for line in fasta_list:
+        #If ID isnt in the set append it to another list
         if line[0] not in seen:
             non_dupes.append(line)
             seen.add(line[0])
     return non_dupes
 
 def save_output(fasta_objects, output_filename, args):
+    #Init empty lists
     id_lines = []
     fasta_strings = []
+    #Loop through all fasta objects and append the fasta strings to a list
     for item in fasta_objects:
-        if item:
+        #I don't remember what this if check is for, it may be from an earlier iteration
+        #For now its commented out, if it causes issues ill put it back in
+        #if item:
             id_lines.append(item.full_id)
             fasta_strings.append(item.fasta_string)
+    #Zip longest interleaves the lists which makes it easier to write
     with open(output_filename, "w") as output_fasta:
         for id, fasta in zip_longest(id_lines, fasta_strings):
             output_fasta.write(id + "\n")
             output_fasta.write(fasta + "\n")
+    #Write all the IDs to a file for further checking
+    #This has become less necessary as time has passed so I may remove this eventually
     with open(output_filename + "_ids", "w") as id_output:
         for id in id_lines:
             id_output.write(id.split("|")[1] + "\n")
     if args.metadata:
         with open(output_filename + "_metadata", "w") as meta_data_output:
+            #using default dict because it handles the initial addition to the dictionary
             species_dict = defaultdict(int)
             full_fasta_strings = []
+            #append each species and fasta string to dictionary and list respectively
             for item in fasta_objects:
-                if item:
+                #if item:
                     species_dict[item.species] += 1
                     full_fasta_strings.append(item.fasta_string)
+            #Write all the info out to the metadata file
             meta_data_output.write(">Species" + "\n")
             for key,val in species_dict.items():
                 meta_data_output.write(f"{key}:{val}" + "\n")
@@ -87,10 +110,11 @@ def save_output(fasta_objects, output_filename, args):
 
 
 def print_summary(fasta_objects):
+    #Fairly simple printing to terminal
     species_dict = defaultdict(int)
     length_list = []
     for item in fasta_objects:
-        if item:
+        #if item:
             species_dict[item.species] += 1
             length_list.append(len(item.fasta_string))
     print("#######################SPECIES#######################")
@@ -100,10 +124,11 @@ def print_summary(fasta_objects):
     try:
         print(f"Mean length of fragment size is: {statistics.mean(length_list)}")
     except:
-        print("Data too short for mean")
+        print("Not enough data for mean!")
     return length_list, species_dict
 
 def print_plots(length, species):
+    #Simple matplotlib plots
     plt.figure()
     plt.hist(length, bins=10, color='blue', edgecolor='black')
     plt.title("Fragment length distribution")
@@ -121,9 +146,12 @@ def print_plots(length, species):
 
 def create_obj(fasta_entry, id_list, length_cutoff):
     id_line = fasta_entry[0]
+    #Uses the extract data function from helper_functions
+    #It just uses some regexes on the ID line eo extract the needed data
     data = extract_data(id_line)
     id, species, protein = data[0], data[1], data[2]
     fasta_lines = fasta_entry[1:]
+    #split the cutoff
     mini,maxi = length_cutoff.split(",")
     if len("".join(fasta_lines)) > int(mini) and len("".join(fasta_lines)) < int(maxi):
         if len(id_list) > 0:
