@@ -77,7 +77,10 @@ def save_output(fasta_objects, output_filename, args):
         #I don't remember what this if check is for, it may be from an earlier iteration
         #For now its commented out, if it causes issues ill put it back in
         #if item:
-            id_lines.append(item.full_id)
+            data = extract_data(item.full_id)
+            id, species, protein, taxid = data[0], data[1], data[2], data[3]
+            new_id = ">tr|" + id + "|" + "OS=" + species + "|" + protein + "|OX=" + taxid
+            id_lines.append(new_id)
             fasta_strings.append(item.fasta_string)
     #Zip longest interleaves the lists which makes it easier to write
     with open(output_filename, "w") as output_fasta:
@@ -149,7 +152,7 @@ def create_obj(fasta_entry, id_list, length_cutoff):
     #Uses the extract data function from helper_functions
     #It just uses some regexes on the ID line eo extract the needed data
     data = extract_data(id_line)
-    id, species, protein = data[0], data[1], data[2]
+    id, species, protein, taxid = data[0], data[1], data[2], data[3]
     fasta_lines = fasta_entry[1:]
     #split the cutoff
     mini,maxi = length_cutoff.split(",")

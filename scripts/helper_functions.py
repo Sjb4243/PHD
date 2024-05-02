@@ -12,7 +12,6 @@ def get_fastas(fasta_file):
     """
     with open(fasta_file, "r") as infile:
         fasta_file = infile.readlines()
-
     skipped = 0
     fasta_list = []
     for i in range(len(fasta_file)):
@@ -47,15 +46,14 @@ def extract_data(fasta_header):
     split_header = fasta_header.split("|")
     reg_split = re.split(r"\||_", fasta_header)
     id = split_header[1]
-    print(split_header)
-    print(re.findall(r"(?<=OS=)\w*(?=[ |_]OX)", split_header[2]))
     species_name = re.findall(r"(?<=OS=).*(?=[ |_]OX)", split_header[2])[0]
     protein = re.findall(r"(?<=.{5} ).*(?= OS=)", reg_split[3])
+    taxid = re.findall(r"(?<=OX=)\w*", fasta_header)[0]
     if not protein:
         protein = "UNKNOWN"
     else:
         protein = protein[0]
-    return([id,species_name, protein])
+    return([id,species_name, protein, taxid])
 
 def make_id(*comps):
     empt = ""
