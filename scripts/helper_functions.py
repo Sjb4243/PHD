@@ -46,8 +46,8 @@ def extract_data(fasta_header):
     split_header = fasta_header.split("|")
     reg_split = re.split(r"\||_", fasta_header)
     id = split_header[1]
-    species_name = re.findall(r"(?<=OS=).*(?=[ |_]OX)", split_header[2])[0]
-    protein = re.findall(r"(?<=[0-9][A-Z]{4}_)\w*(?=[\||_]OS)|(?<=\|)\w*(?=\|OS)", fasta_header)
+    species_name = re.findall(r"(?<=OS=).*(?=[ |_]OX)", fasta_header)[0]
+    protein = re.findall(r"((?<=_[A-Z0-9]{5}_)\w*(?=[\||_]OS)|(?<=\|)\w*(?=\|OS))", fasta_header)
     taxid = re.findall(r"(?<=OX=)[0-9]*", fasta_header)[0]
     if not protein:
         protein = "UNKNOWN"
