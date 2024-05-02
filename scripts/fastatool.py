@@ -79,7 +79,7 @@ def save_output(fasta_objects, output_filename, args):
         #if item:
             data = extract_data(item.full_id)
             id, species, protein, taxid = data[0], data[1], data[2], data[3]
-            new_id = ">tr|" + id + "|" + "OS=" + species + "|" + protein + "|OX=" + taxid
+            new_id = ">tr|" + id + "|" + protein + "|" + "OS=" + species + "|OX=" + taxid
             id_lines.append(new_id)
             fasta_strings.append(item.fasta_string)
     #Zip longest interleaves the lists which makes it easier to write
