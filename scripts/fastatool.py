@@ -25,12 +25,17 @@ def main():
     parser.add_argument('-o', '--output', help='Output file containing curated fastas')
     parser.add_argument('-c', '--cutoff', help = 'Length cutoff for fragments, has a minimum and maximum length, sep by comma', default="200,200000000")
     parser.add_argument('-m', '--metadata', help= 'If writing to output, create a metadata file', default=False)
+    parser.add_argument('-d', '--diff', help = 'Additional fasta file  to compare. Will return every fasta not in the second file but in the first.')
     args = parser.parse_args()
     #Uses the get_fastas function from helper_functions.py
     #This returns a 2d list, where each element consists of a list of the ID line followed by the fasta strings
     fasta_list= get_fastas(args.fasta)
-    #Removes duplicate ID lines
     fasta_list = remove_duplicates(fasta_list)
+    if args.diff:
+        second_fasta = get_fastas(args.diff)
+        second_fasta = remove_duplicates(second_fasta)
+    fasta_list = get_difference(fasta_list, second_fasta)
+    #Removes duplicate ID lines
     input_id_list = []
     #If the user wants to filter by IDs, generate a list of IDs based on an input file
     if args.ID:
@@ -57,6 +62,12 @@ def main():
     if args.plots:
         print_plots(length_list, species_dict)
 
+def get_difference(first_fasta, second_fasta):
+    second_id_lines = [line[0] for line in second_fasta]
+    difference = [line[0:] for line in first_fasta if line[0] not in second_id_lines]
+    print(difference)
+    return difference
+
 def remove_duplicates(fasta_list):
     #init a set - now that I think about it this may not need to be a set
     seen = set()
@@ -74,9 +85,7 @@ def save_output(fasta_objects, output_filename, args):
     fasta_strings = []
     #Loop through all fasta objects and append the fasta strings to a list
     for item in fasta_objects:
-        #I don't remember what this if check is for, it may be from an earlier iteration
-        #For now its commented out, if it causes issues ill put it back in
-        #if item:
+        if item:
             data = extract_data(item.full_id)
             id, species, protein, taxid = data[0], data[1], data[2], data[3]
             new_id = ">tr|" + id + "|" + protein + "|" + "OS=" + species + "|OX=" + taxid
@@ -99,7 +108,7 @@ def save_output(fasta_objects, output_filename, args):
             full_fasta_strings = []
             #append each species and fasta string to dictionary and list respectively
             for item in fasta_objects:
-                #if item:
+                if item:
                     species_dict[item.species] += 1
                     full_fasta_strings.append(item.fasta_string)
             #Write all the info out to the metadata file
@@ -117,7 +126,7 @@ def print_summary(fasta_objects):
     species_dict = defaultdict(int)
     length_list = []
     for item in fasta_objects:
-        #if item:
+        if item:
             species_dict[item.species] += 1
             length_list.append(len(item.fasta_string))
     print("#######################SPECIES#######################")
