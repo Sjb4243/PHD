@@ -2,7 +2,6 @@ import json
 import os
 import re
 import argparse
-import ast
 class alphafold_obj:
     def __init__(self, summary_jsonpath, full_json_path, cifpath, target_atoms):
         self.cifpath = cifpath
@@ -29,16 +28,23 @@ class alphafold_obj:
         pdb_file = []
         target_atoms_indexes = {}
         for line in self.ciffile:
+            #Capture pdb part
             if pdb_found and line.strip() != "#":
                 pdb_file.append(line)
+                #For every line, check if any of the target atoms are in the current line
                 for name in self.target_atoms:
                     if name in line:
+                        #Get the first instance of each name
                         if name not in target_atoms_indexes.keys():
+                            #Regex to find residue position(each ATP atom is considered a residue)
                             search = re.search(r"HETATM ([0-9]*)", line)
                             match = search.group(1)
+                            #Construct dictionary of ATP atoms: resi index
                             target_atoms_indexes[name] = int(match)
+            #Start of PDB line
             if line.startswith("_atom_site.pdbx_PDB_model_num"):
                 pdb_found = True
+        #Using the residue index, get the confidence score from the atom_plddts index
         for key, val in target_atoms_indexes.items():
             conf_score = self.full_jsonfile["atom_plddts"][val]
             print(f"({val})    Atom:{key} --- Confidence score: {conf_score}")
