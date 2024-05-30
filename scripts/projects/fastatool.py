@@ -31,16 +31,18 @@ def main():
     #This returns a 2d list, where each element consists of a list of the ID line followed by the fasta strings
     fasta_list= get_fastas(args.fasta)
     fasta_list = remove_duplicates(fasta_list)
+
     if args.diff:
         second_fasta = get_fastas(args.diff)
         second_fasta = remove_duplicates(second_fasta)
-    fasta_list = get_difference(fasta_list, second_fasta)
-    #Removes duplicate ID lines
+        fasta_list = get_difference(fasta_list, second_fasta)
+
     input_id_list = []
     #If the user wants to filter by IDs, generate a list of IDs based on an input file
     if args.ID:
         with open(args.ID, "r") as idfile:
             input_id_list = [line.strip() for line in idfile]
+
     #Init a list for storing fasta objects
     obj_list = []
     for fasta in fasta_list:

@@ -44,9 +44,6 @@ for clade, taxid_list in reversed(parent_dict.items()):
             key_list = [key for key, val in reversed(parent_dict.items()) if taxid in val]
             taxid_dict[taxid].append(key_list)
             taxid_check.append(taxid)
-
-for key, val in taxid_dict.items():
-    print(key,val)
 final_dict = {}
 for key, val in taxid_dict.items():
     initialisation_set = set(val[0])
@@ -56,18 +53,18 @@ for key, val in taxid_dict.items():
         common_list = [element for element in val[0] if element in initialisation_set]
     if not common_list:
         common_list = val[0]
-    final_dict.update({key:common_list[-6]})
+    final_dict.update({key:common_list[args.cutoff]})
 
 with open("newick_test", "r") as file:
     beep = file.readlines()
 beep = beep[0]
 pattern = r'(tr.*?)(?=OX)'
-beep = re.sub(pattern, "", beep)
+#beep = re.sub(pattern, "", beep)
 for key, val in final_dict.items():
     find_str = "OX_" + str(key)
     beep = beep.replace(find_str, val)
     beep = beep.replace(" ", "")
     beep = beep.replace("(in:glomeromycetes)", "")
 
-with open("text.txt", "w") as outfile:
+with open(args.outfile, "w") as outfile:
     outfile.write(beep)

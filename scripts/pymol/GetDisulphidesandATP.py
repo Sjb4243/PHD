@@ -3,7 +3,6 @@ import numpy as np
 import os
 import argparse
 import subprocess
-import ast
 resi_dict = {}
 
 def main():
