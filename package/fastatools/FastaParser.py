@@ -1,7 +1,7 @@
 import re
 import time
 import sys
-
+import json
 class fasta_obj:
     def __init__(self, fasta_dir):
         self.base_fasta = self.parse(fasta_dir)
@@ -98,12 +98,19 @@ class fasta_obj:
         ]
         return fasta_obj(return_fasta)
 
-    def fetch_family(self, secrets):
+    def fetch_family(self, secrets, save = "", read = ""):
         #Set up credentials found in file
-        self.__set_creds(secrets)
-        #for each full line, start the fetching process
-        for header in self.lines:
-            self._start_fetch(header)
+        if not read:
+            self.__set_creds(secrets)
+            #for each full line, start the fetching process
+            for header in self.lines:
+                self._start_fetch(header)
+            if save:
+                with open(save, "w") as out:
+                    json.dump(self.families, out)
+        else:
+            with open(read, "r") as infile:
+                self.families = json.load(infile)
         return self
 
     def __set_creds(self, secrets):
